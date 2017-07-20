@@ -166,7 +166,7 @@ echo -e "\nModifying NCBI BLAST files"
 cd ${working_dir}
 echo ${working_dir}
 #sh ./modify ${cxx_dir} > ${working_dir}/log/modify.output
-`cp -rf ./c++ ${ncbi_blast_version}`
+`\cp -rf ./c++ ${ncbi_blast_version}`
 
 if [ $? -ne 0 ]; then
     echo -e "\nError: while modirying the source code files. See \"modify.output\" for more details. Exiting..."
@@ -221,18 +221,18 @@ pid=$!
 trap "stop_progress_ind $pid; exit" INT TERM EXIT
 
 #Modify CONF_LIB of Makefile.mk to inlcude the libraries -lgpublast and -lcudart
-cp ${build_dir}/Makefile.mk ${build_dir}/Makefile.mk.backup
+\cp ${build_dir}/Makefile.mk ${build_dir}/Makefile.mk.backup
 conf_libs_line=`cat ${build_dir}/Makefile.mk | grep ^CONF_LIB`
 conf_libs_line=${conf_libs_line}" -lgpublastn -lcudart"
 sed "/^CONF_LIBS/ c\ ${conf_libs_line}" ${build_dir}/Makefile.mk > ${build_dir}/Makefile.mk.temp
 
-mv ${build_dir}/Makefile.mk.temp ${build_dir}/Makefile.mk
+\mv ${build_dir}/Makefile.mk.temp ${build_dir}/Makefile.mk
 
 fast_cxxflags_line=`cat ${build_dir}/Makefile.mk | grep ^FAST_CXXFLAGS`
 fast_cxxflags_line=${fast_cxxflags_line}" -mssse3 -D_LINUX"
 sed "/^FAST_CXXFLAGS/ c\ ${fast_cxxflags_line}" ${build_dir}/Makefile.mk > ${build_dir}/Makefile.mk.temp
 
-mv ${build_dir}/Makefile.mk.temp ${build_dir}/Makefile.mk
+\mv ${build_dir}/Makefile.mk.temp ${build_dir}/Makefile.mk
 
 
 make all_r 2>&1 | tee ${working_dir}/log/ncbi_blast.output
