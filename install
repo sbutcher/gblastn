@@ -6,7 +6,7 @@
 function progress_ind {
   # Sleep at least 1 second otherwise this algoritm will consume
   # a lot system resources.
-  interval=1
+  interval=10
 
   while true
   do
@@ -40,7 +40,7 @@ fi
 echo "Do you want to install GPU-BLASTN on an existing installation of \"blastn\" [yes/no]"
 echo "yes: you will be asked for the installation directory of the \"blastn\" executable"
 echo "no: will download and install \"${ncbi_blast_version}\""
-read user_input
+user_input=no
 
 if [ $user_input == "yes" ]; then
     echo "Please input the bin directory of \"blastn\" of \"${ncbi_blast_version}\""
@@ -124,7 +124,7 @@ if [ $download == 1 ]; then
     echo -e "\nConfiguring ${ncbi_blast_version} with options:"
     echo -e "\n${configuration_options}"
     echo -e "\nIf you want to change these options edit the file \"install\", delete the directory ${ncbi_blast_version}, and return install"
-    $configuration_options &>  ${working_dir}/log/configure.output
+    $configuration_options 2>&1 | tee  ${working_dir}/log/configure.output
     if [ $? -ne 0 ]; then
 	echo -e "\nError in configuring NCBI BLAST installation. Look at \"configure.output\" for more information"
 	exit 1
@@ -151,7 +151,7 @@ progress_ind &
 pid=$!
 trap "stop_progress_ind $pid; exit" INT TERM EXIT
 
-make all_r  &>  ${working_dir}/log/ncbi_blast.output
+make all_r  2>&1 | tee  ${working_dir}/log/ncbi_blast.output
 if [ $? -ne 0 ]; then
     echo -e "\nError in NCBI BLAST installation. Look at \"ncbi_blast.output\" for more information"
     exit 1
@@ -204,7 +204,7 @@ fi
 #cd $cxx_dir/src/algo/blast/gpu_blast/
 #echo "cd" $cxx_dir/src/algo/blast/gpu_blast/
     #make -f makefile.shared -B NVCC_PATH=${nvcc} PROJ_DIR=${proj_dir} CXX_DIR=${cxx_dir} CUDA_LIB=${cudart_lib} #> ${working_dir}/gpu_blast.output
-make -f makefile -B NVCC_PATH=${cuda_dir} PROJ_DIR=${proj_dir} CXX_DIR=${cxx_dir} CUDA_LIB=${cudart_lib} &> ${working_dir}/log/gpu_blast.output
+make -f makefile -B NVCC_PATH=${cuda_dir} PROJ_DIR=${proj_dir} CXX_DIR=${cxx_dir} CUDA_LIB=${cudart_lib} 2>&1 | tee ${working_dir}/log/gpu_blast.output
 
 echo "Completed compiled gpu part......"
 
@@ -235,7 +235,7 @@ sed "/^FAST_CXXFLAGS/ c\ ${fast_cxxflags_line}" ${build_dir}/Makefile.mk > ${bui
 mv ${build_dir}/Makefile.mk.temp ${build_dir}/Makefile.mk
 
 
-make all_r  &>  ${working_dir}/log/ncbi_blast.output
+make all_r 2>&1 | tee ${working_dir}/log/ncbi_blast.output
 if [ $? -ne 0 ]; then
     echo -e "\nError in NCBI BLAST installation. Look at \"ncbi_blast.output\" for more information"
     exit 1
