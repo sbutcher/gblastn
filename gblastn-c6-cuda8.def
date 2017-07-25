@@ -1,0 +1,52 @@
+Bootstrap: docker
+From: centos:centos6
+
+%post
+############################################################################
+#pre-requisite packages
+# centos 6 required because of the GCC version - get failures with newer ones
+############################################################################
+yum -y groupinstall "Development Tools"
+yum install -y wget git build-essential
+
+############################################################################
+#download cuda, extract and run the toolkit in silent mode
+wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
+chmod +x cuda_8.0.61_375.26_linux-run && \
+./cuda_8.0.61_375.26_linux-run --extract=`pwd` && \
+./cuda-linux64-rel-8.0.61-21551265.run -noprompt
+ 
+./cuda-samples-linux-8.0.61-21551265.run -noprompt -cudaprefix=/usr/local/cuda-8.0 -prefix=/usr/local/cuda-8.0/samples
+############################################################################
+
+# ensure cuda is visible for next part
+export PATH=/usr/local/cuda-8.0/bin:${PATH}
+export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64/:/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH}
+export LDFLAGS=-L/usr/local/cuda-8.0/lib64/stubs/:${LDFLAGS}
+
+# check nvcc is visible - remove when happy as we check later
+echo `which nvcc`
+
+############################################################################
+# use sbutcher fork of gblastn since it has a modified installer
+# for unattended use
+echo "cloning gblastn repo"
+git clone https://github.com/sbutcher/gblastn.git /usr/local/gblastn
+cd /usr/local/gblastn
+
+############################################################################
+echo "beginning gblastn install, this will take some time..."
+chmod +x install
+./install
+
+echo "done"
+# binaries available in /usr/local/gblastn
+############################################################################
+
+%environment
+export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:/usr/local/cuda-8.0/extras/CUPTI/lib64/:/usr/local/cuda-8.0/lib64/stubs:/usr/local/gblastn/ncbi-blast-2.2.28+-src/c++/GCC447-ReleaseMT64/lib:${LD_LIBRARY_PATH}
+export PATH=/usr/local/cuda-8.0/bin:/usr/local/gblastn/ncbi-blast-2.2.28+-src/c++/GCC447-ReleaseMT64/bin:${PATH}
+export LDFLAGS=-L/usr/local/cuda-8.0/lib64/stubs
+
+## do a run section based on binary location
+
